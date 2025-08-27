@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Book The Nurse — Demo (HTML/CSS/JS)</title>
+  <style>
+    /* ---- Basic Reset ---- */
+    :root{
+      --primary:#065f46; /* green */
+      --muted:#6b7280;
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --accent:#06b6d4;
+      --danger:#ef4444;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;color:#0f172a;background:var(--bg)}
+    a{color:inherit}
+    .container{max-width:1100px;margin:24px auto;padding:16px}
+
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    .nav{display:flex;gap:8px;align-items:center}
+    button{cursor:pointer}
+
+    /* ---- Layout ---- */
+    .grid{display:grid;grid-template-columns:1fr 320px;gap:18px;margin-top:18px}
+    @media(max-width:880px){.grid{grid-template-columns:1fr}.aside{order:2}}
+
+    .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+    h2{margin:0 0 8px}
+
+    /* ---- Forms ---- */
+    .form-row{display:flex;gap:8px;margin-bottom:10px}
+    .form-row .col{flex:1}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=text],input[type=password],input[type=tel],input[type=email],select{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef2;background:#fbfdff}
+    textarea{width:100%;min-height:80px;padding:10px;border-radius:8px;border:1px solid #e6eef2;background:#fbfdff}
+    .btn{padding:10px 12px;border-radius:8px;border:0;background:var(--primary);color:white;font-weight:600}
+    .btn-ghost{background:transparent;border:1px solid #e6eef2;color:var(--primary)}
+    .small{font-size:13px;color:var(--muted)}
+
+    /* ---- Nurse cards ---- */
+    .nurse-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+    .nurse{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:12px;background:linear-gradient(180deg,#fff,#fbfdff)}
+    .avatar{width:56px;height:56px;border-radius:10px;background:#e6f6f2;display:flex;align-items:center;justify-content:center;font-weight:700}
+    .nurse h3{margin:0}
+    .meta{font-size:13px;color:var(--muted)}
+    .tag{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#1e40af;font-weight:600;font-size:12px}
+
+    /* ---- Aside list ---- */
+    .aside .slot{display:flex;justify-content:space-between;gap:8px;padding:10px;border-radius:8px;border:1px dashed #eef2f1;margin-bottom:8px}
+
+    /* ---- Booking modal & calendar ---- */
+    .modal{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:flex;align-items:center;justify-content:center;z-index:200}
+    .modal .card{width:100%;max-width:760px}
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+    .cal-day{padding:8px;border-radius:8px;text-align:center;border:1px solid transparent}
+    .cal-day:hover{border-color:#e2e8f0;cursor:pointer}
+    .cal-day.has-slot{background:#ecfdf5;border-color:#bbf7d0}
+
+    /* ---- small UI ---- */
+    .muted{color:var(--muted)}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#f1f5f9;font-size:13px}
+
+    /* ---- chat ---- */
+    .chat-box{display:flex;flex-direction:column;height:420px}
+    .messages{flex:1;overflow:auto;padding:8px}
+    .message{max-width:70%;margin-bottom:8px;padding:8px;border-radius:10px;background:#f1f5f9}
+    .message.me{margin-left:auto;background:linear-gradient(90deg,#dcfce7,#bbf7d0)}
+
+    footer{margin-top:24px;text-align:center;color:var(--muted);font-size:13px}
+
+    /* ---- responsive tweaks ---- */
+    @media(max-width:520px){.nav{display:none}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">BN</div>
+        <div>
+          <div style="font-weight:700">Book The Nurse</div>
+          <div class="small">Simple demo — front-end only (localStorage)</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <button id="btn-home" class="btn-ghost">Home</button>
+        <button id="btn-login" class="btn">Login / Register</button>
+      </nav>
+    </header>
+
+    <main class="grid">
+      <section>
+        <div id="home" class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h2>Find a nurse</h2>
+            <div class="small muted">Browse by category</div>
+          </div>
+
+          <div style="margin:12px 0;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="pill" data-cat="all">All</button>
+            <button class="pill" data-cat="elderly">Elderly care</button>
+            <button class="pill" data-cat="pediatric">Pediatric</button>
+            <button class="pill" data-cat="wound">Wound care</button>
+            <button class="pill" data-cat="maternity">Maternity</button>
+            <button class="pill" data-cat="general">General</button>
+          </div>
+
+          <div id="nurse-list" class="nurse-list"></div>
+        </div>
+
+        <div id="profile-view" style="display:none;margin-top:16px" class="card"></div>
+
+        <!-- Booking modal (hidden initially) -->
+        <div id="modal" style="display:none" class="modal">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <h3 id="modal-title">Book slot</h3>
+              <button id="modal-close" class="btn-ghost">Close</button>
+            </div>
+            <div id="modal-body"></div>
+          </div>
+        </div>
+
+      </section>
+
+      <aside class="aside">
+        <div class="card">
+          <h3>Your account</h3>
+          <div id="account-area">
+            <div class="small muted">Not signed in</div>
+            <div style="margin-top:8px">
+              <button id="open-auth" class="btn">Login / Register</button>
+            </div>
+            <div style="margin-top:12px" class="small muted">Tip: Admin default — <b>admin@example.com</b> / <b>admin</b></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3>My bookings</h3>
+          <div id="my-bookings"></div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3>Quick actions</h3>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+            <button id="btn-register-nurse" class="btn-ghost">Register as Nurse</button>
+            <button id="btn-my-calendar" class="btn-ghost">My calendar (Nurses)</button>
+            <button id="btn-admin" class="btn-ghost">Admin panel</button>
+          </div>
+        </div>
+
+      </aside>
+    </main>
+
+    <footer>
+      Demo project saved to your browser (localStorage). Works offline. For real app you need a backend.
+    </footer>
+  </div>
+
+  <!-- Templates and small helpers hidden -->
+  <template id="nurse-template">
+    <div class="nurse card">
+      <div class="avatar">NN</div>
+      <div style="flex:1">
+        <h3>NAME</h3>
+        <div class="meta">CATEGORY — <span class="muted">EXPERIENCE years</span></div>
+        <div style="margin-top:6px" class="small">Status: <span class="status">STATUS</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+        <button class="btn btn-book">View</button>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    /* =========
+       Simple front-end app that stores data in localStorage.
+       Roles: patient, nurse, admin
+       - Users can register (name + phone + email + password)
+       - Nurses register and go to pending approval
+       - Admin can approve nurses
+       - Nurses add availability slots (date + start + end) — stored per nurse
+       - Patients can book available slots; booking status: pending -> accepted/declined
+       - Chat inside a booking (messages saved in localStorage)
+       Note: This is a demo. In production a backend + auth required.
+       ========== */
+
+    // --- Utilities ---
+    const STORAGE_KEY = 'book-the-nurse-v1';
+    function loadState(){
+      try{const s = localStorage.getItem(STORAGE_KEY); if(s) return JSON.parse(s)}catch(e){}
+      return null;
+    }
+    function saveState(state){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+
+    // --- Initial seed data ---
+    function seed(){
+      const defaultState = {
+        users: [
+          {id:uid(),name:'Admin',email:'admin@example.com',phone:'',password:'admin',role:'admin'},
+          {id:uid(),name:'Demo Patient',email:'patient@example.com',phone:'0123456789',password:'patient',role:'patient'}
+        ],
+        nurses: [
+          // nurse: {id, userId, category, experience, bio, approved, slots: [{id,date,start,end,booked}], ratings:[]}
+        ],
+        bookings: [],
+        sessions: {currentUserId:null}
+      };
+      saveState(defaultState);
+      return defaultState;
+    }
+
+    function getState(){
+      let s = loadState(); if(!s){s = seed()} return s;
+    }
+
+    function uid(prefix='id'){return prefix + '-' + Math.random().toString(36).slice(2,9)}
+
+    // --- App state ---
+    let state = getState();
+
+    // --- DOM refs ---
+    const nurseListEl = document.getElementById('nurse-list');
+    const accountArea = document.getElementById('account-area');
+    const btnLogin = document.getElementById('btn-login');
+    const openAuth = document.getElementById('open-auth');
+    const btnRegisterNurse = document.getElementById('btn-register-nurse');
+    const btnMyCalendar = document.getElementById('btn-my-calendar');
+    const btnAdmin = document.getElementById('btn-admin');
+    const myBookingsEl = document.getElementById('my-bookings');
+    const btnHome = document.getElementById('btn-home');
+
+    // --- Renderers ---
+    function renderNurses(filterCategory='all'){
+      nurseListEl.innerHTML='';
+      const tpl = document.getElementById('nurse-template');
+      const nurses = state.nurses.filter(n=> filterCategory==='all' ? true : n.category===filterCategory);
+      if(nurses.length===0){nurseListEl.innerHTML='<div class="card small muted">No nurses found. Register as a nurse or wait for admin approval.</div>';return}
+      nurses.forEach(n=>{
+        const node = tpl.content.cloneNode(true);
+        const root = node.querySelector('.nurse');
+        root.querySelector('.avatar').textContent = n.userName.slice(0,2).toUpperCase();
+        root.querySelector('h3').textContent = n.userName;
+        root.querySelector('.meta').innerHTML = `<span class="tag">${n.category}</span> &nbsp; &middot; ${n.experience} yrs`;
+        root.querySelector('.status').textContent = n.approved ? 'Approved' : 'Pending';
+        const btn = root.querySelector('.btn-book');
+        btn.addEventListener('click',()=>openProfile(n.id));
+        nurseListEl.appendChild(node);
+      })
+    }
+
+    function renderAccount(){
+      const user = getCurrentUser();
+      if(!user){
+        accountArea.innerHTML = `
+          <div class="small muted">Not signed in</div>
+          <div style="margin-top:8px">
+            <button id="open-auth-2" class="btn">Login / Register</button>
+          </div>
+          <div style="margin-top:12px" class="small muted">Tip: Admin default — <b>admin@example.com</b> / <b>admin</b></div>
+        `;
+        document.getElementById('open-auth-2').addEventListener('click',openAuthModal);
+        return;
+      }
+      let html = `<div style="font-weight:700">${escapeHtml(user.name)} (${user.role})</div>`;
+      if(user.phone) html += `<div class="small muted">${escapeHtml(user.phone)}</div>`;
+      html += `<div style="margin-top:8px;display:flex;gap:8px"><button id="btn-logout" class="btn-ghost">Logout</button>`;
+      if(user.role==='nurse') html += `<button id="btn-goto-nurse" class="btn">My dashboard</button>`;
+      if(user.role==='admin') html += `<button id="btn-admin-2" class="btn">Admin</button>`;
+      html += `</div>`;
+      accountArea.innerHTML = html;
+      document.getElementById('btn-logout').addEventListener('click',logout);
+      if(user.role==='nurse') document.getElementById('btn-goto-nurse').addEventListener('click',openNurseDashboard);
+      if(user.role==='admin') document.getElementById('btn-admin-2').addEventListener('click',openAdminPanel);
+    }
+
+    function renderMyBookings(){
+      const user = getCurrentUser();
+      myBookingsEl.innerHTML = '';
+      if(!user){myBookingsEl.innerHTML='<div class="small muted">Sign in to see your bookings</div>';return}
+      const bookings = state.bookings.filter(b=> b.patientId===user.id || (getNurseByUserId(user.id) && b.nurseId===getNurseByUserId(user.id).id));
+      if(bookings.length===0){myBookingsEl.innerHTML='<div class="small muted">No bookings yet</div>';return}
+      bookings.forEach(b=>{
+        const nurse = getNurseById(b.nurseId);
+        const isPatient = user.role==='patient';
+        const el = document.createElement('div'); el.className='slot';
+        el.innerHTML = `<div style="flex:1">
+                        <div style="font-weight:700">${escapeHtml(nurse.userName)}</div>
+                        <div class="small muted">${b.date} ${b.start} - ${b.end}</div>
+                        <div class="small">Status: <b>${b.status}</b></div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:6px">
+                          ${isPatient? `<button class="btn btn-ghost book-cancel" data-id="${b.id}">Cancel</button>` : ''}
+                          <button class="btn" data-chat="${b.id}">Chat</button>
+                        </div>`;
+        myBookingsEl.appendChild(el);
+        if(isPatient) el.querySelector('.book-cancel').addEventListener('click',()=>cancelBooking(b.id));
+        el.querySelector('[data-chat]').addEventListener('click',()=>openChat(b.id));
+      })
+    }
+
+    // --- Helpers ---
+    function getCurrentUser(){
+      if(!state.sessions) return null; const id = state.sessions.currentUserId; if(!id) return null; return state.users.find(u=>u.id===id) || null;
+    }
+    function getNurseById(id){return state.nurses.find(n=>n.id===id)}
+    function getNurseByUserId(uid){return state.nurses.find(n=>n.userId===uid)}
+
+    function escapeHtml(s){if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+    // --- Account flows ---
+    btnLogin.addEventListener('click',openAuthModal);
+    openAuth.addEventListener('click',openAuthModal);
+    btnHome.addEventListener('click',()=>{document.getElementById('home').scrollIntoView()});
+
+    function openAuthModal(){
+      showModal('Login or Register', authHtml(), initAuthModal);
+    }
+
+    function authHtml(){
+      return `
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:260px">
+            <h4>Login</h4>
+            <div class="form-row"><div class="col"><label>Email</label><input id="login-email" type="email"/></div></div>
+            <div class="form-row"><div class="col"><label>Password</label><input id="login-pass" type="password"/></div></div>
+            <div style="margin-top:8px"><button id="login-do" class="btn">Login</button></div>
+          </div>
+          <div style="flex:1;min-width:260px;border-left:1px dashed #eef2f1;padding-left:12px">
+            <h4>Register (Patient)</h4>
+            <div class="form-row"><div class="col"><label>Full name</label><input id="reg-name" type="text"/></div></div>
+            <div class="form-row"><div class="col"><label>Phone number</label><input id="reg-phone" type="tel"/></div></div>
+            <div class="form-row"><div class="col"><label>Email</label><input id="reg-email" type="email"/></div></div>
+            <div class="form-row"><div class="col"><label>Password</label><input id="reg-pass" type="password"/></div></div>
+            <div style="margin-top:8px"><button id="reg-do" class="btn">Register</button></div>
+            <div class="small muted" style="margin-top:8px">To register as a nurse use "Register as Nurse" quick action (left).</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function initAuthModal(){
+      document.getElementById('login-do').addEventListener('click',()=>{
+        const email = document.getElementById('login-email').value.trim();
+        const pass = document.getElementById('login-pass').value;
+        const user = state.users.find(u=>u.email===email && u.password===pass);
+        if(!user){alert('Invalid credentials');return}
+        state.sessions.currentUserId = user.id; saveState(state); closeModal(); renderAll();
+      });
+      document.getElementById('reg-do').addEventListener('click',()=>{
+        const name = document.getElementById('reg-name').value.trim();
+        const phone = document.getElementById('reg-phone').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const pass = document.getElementById('reg-pass').value;
+        if(!name || !phone || !email || !pass){alert('Please fill all fields');return}
+        if(state.users.find(u=>u.email===email)){alert('Email already used');return}
+        const u = {id:uid('u'),name,phone,email,password:pass,role:'patient'};
+        state.users.push(u); state.sessions.currentUserId = u.id; saveState(state); closeModal(); renderAll();
+      });
+    }
+
+    function logout(){state.sessions.currentUserId = null; saveState(state); renderAll();}
+
+    // --- Nurse registration flow ---
+    btnRegisterNurse.addEventListener('click',()=>{
+      showModal('Register as Nurse', nurseRegHtml(), initNurseReg);
+    });
+
+    function nurseRegHtml(){
+      return `
+        <div>
+          <div class="small muted">You will create an account and a nurse profile that must be approved by admin.</div>
+          <div style="margin-top:8px">
+            <label>Full name</label><input id="n-name" type="text" />
+            <label>Email</label><input id="n-email" type="email" />
+            <label>Phone</label><input id="n-phone" type="tel" />
+            <label>Password</label><input id="n-pass" type="password" />
+            <label>Category</label>
+            <select id="n-cat"><option value="general">General</option><option value="elderly">Elderly care</option><option value="pediatric">Pediatric</option><option value="wound">Wound care</option><option value="maternity">Maternity</option></select>
+            <label>Experience (years)</label><input id="n-exp" type="text" />
+            <label>Short bio</label><textarea id="n-bio"></textarea>
+            <div style="margin-top:8px"><button id="n-reg-do" class="btn">Register Nurse</button></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function initNurseReg(){
+      document.getElementById('n-reg-do').addEventListener('click',()=>{
+        const name=document.getElementById('n-name').value.trim();
+        const email=document.getElementById('n-email').value.trim();
+        const phone=document.getElementById('n-phone').value.trim();
+        const pass=document.getElementById('n-pass').value;
+        const category=document.getElementById('n-cat').value;
+        const exp=document.getElementById('n-exp').value||0;
+        const bio=document.getElementById('n-bio').value||'';
+        if(!name||!email||!phone||!pass){alert('Fill required');return}
+        if(state.users.find(u=>u.email===email)){alert('Email used');return}
+        const user = {id:uid('u'),name,email,phone,password:pass,role:'nurse'};
+        state.users.push(user);
+        const nurse = {id:uid('n'),userId:user.id,userName:name,category,experience:exp,bio,approved:false,slots:[]};
+        state.nurses.push(nurse);
+        state.sessions.currentUserId = user.id;
+        saveState(state); closeModal(); renderAll(); alert('Registered. Wait for admin approval before patients can book you.');
+      });
+    }
+
+    // --- Admin panel ---
+    btnAdmin.addEventListener('click',openAdminPanel);
+    function openAdminPanel(){
+      const user = getCurrentUser(); if(!user || user.role!=='admin'){alert('Admin only');return}
+      let html = '<h3>Admin panel</h3>';
+      html += '<div style="display:flex;gap:12px;flex-wrap:wrap">';
+      html += '<div style="flex:1;min-width:300px">';
+      html += '<h4>Pending nurses</h4>';
+      const pending = state.nurses.filter(n=>!n.approved);
+      if(pending.length===0) html += '<div class="small muted">No pending nurses</div>';
+      pending.forEach(n=>{
+        const u = state.users.find(x=>x.id===n.userId);
+        html += `<div style="padding:8px;border-radius:8px;margin-bottom:8px;background:#fff"><b>${escapeHtml(n.userName)}</b><div class="small muted">${escapeHtml(n.category)} — ${escapeHtml(n.experience)} yrs</div><div style="margin-top:8px"><button class="approve" data-id="${n.id}">Approve</button> <button class="reject" data-id="${n.id}">Reject</button></div></div>`;
+      })
+      html += '</div>';
+
+      html += '<div style="flex:1;min-width:300px">';
+      html += '<h4>All users</h4>';
+      state.users.forEach(u=>{ html += `<div style="padding:8px;border-radius:8px;margin-bottom:8px;background:#fff"><b>${escapeHtml(u.name)}</b> <div class="small muted">${escapeHtml(u.email)} — ${u.role}</div></div>` });
+      html += '</div>';
+
+      html += '</div>';
+      showModal('Admin', html, ()=>{
+        document.querySelectorAll('.approve').forEach(btn=>btn.addEventListener('click',e=>{
+          const id = e.target.dataset.id; const n = getNurseById(id); if(!n) return; n.approved=true; saveState(state); alert('Approved'); closeModal(); renderAll();
+        }));
+        document.querySelectorAll('.reject').forEach(btn=>btn.addEventListener('click',e=>{
+          const id = e.target.dataset.id; const nIndex = state.nurses.findIndex(x=>x.id===id); if(nIndex===-1) return; const nid = state.nurses[nIndex].userId; state.nurses.splice(nIndex,1); state.users = state.users.filter(u=>u.id!==nid); saveState(state); alert('Rejected and removed'); closeModal(); renderAll();
+        }));
+      });
+    }
+
+    // --- Nurse dashboard / calendar ---
+    btnMyCalendar.addEventListener('click',()=>{
+      const user = getCurrentUser(); if(!user || user.role!=='nurse'){alert('Sign in as nurse');return}
+      openNurseDashboard();
+    });
+
+    function openNurseDashboard(){
+      const user = getCurrentUser(); const nurse = getNurseByUserId(user.id);
+      if(!nurse){alert('No nurse profile found for this account');return}
+      let html = `<h3>My nurse dashboard — ${escapeHtml(nurse.userName)}</h3>`;
+      html += `<div class="small muted">Status: ${nurse.approved ? '<b style="color:green">Approved</b>' : '<b style="color:orange">Pending approval</b>'}</div>`;
+      html += `<div style="margin-top:12px"><h4>Availability</h4>`;
+      html += `<div style="display:flex;gap:8px;margin-bottom:8px"><input id="slot-date" type="date"/> <input id="slot-start" placeholder="Start e.g. 09:00"/> <input id="slot-end" placeholder="End e.g. 12:00"/> <button id="add-slot" class="btn">Add</button></div>`;
+      html += `<div id="slot-list">`;
+      if(nurse.slots.length===0) html += '<div class="small muted">No slots yet</div>';
+      nurse.slots.forEach(s=>{
+        html += `<div style="padding:8px;border-radius:8px;background:#fff;margin-bottom:6px;display:flex;justify-content:space-between"><div>${s.date} ${s.start} - ${s.end} ${s.booked?'<span class="small muted">(booked)</span>':''}</div><div><button class="del-slot" data-id="${s.id}">Delete</button></div></div>`;
+      })
+      html += `</div></div>`;
+
+      html += `<div style="margin-top:12px"><h4>Bookings for you</h4>`;
+      const bookings = state.bookings.filter(b=>b.nurseId===nurse.id);
+      if(bookings.length===0) html += '<div class="small muted">No bookings</div>';
+      bookings.forEach(b=>{
+        const patient = state.users.find(u=>u.id===b.patientId);
+        html += `<div style="padding:8px;border-radius:8px;background:#fff;margin-bottom:6px;display:flex;justify-content:space-between"><div><b>${escapeHtml(patient.name)}</b><div class="small muted">${b.date} ${b.start}-${b.end}</div><div class="small">Status: ${b.status}</div></div><div><button class="accept" data-id="${b.id}">Accept</button><button class="decline" data-id="${b.id}">Decline</button></div></div>`;
+      })
+      html += `</div>`;
+
+      showModal('Nurse dashboard', html, ()=>{
+        document.getElementById('add-slot').addEventListener('click',()=>{
+          const d=document.getElementById('slot-date').value; const st=document.getElementById('slot-start').value; const en=document.getElementById('slot-end').value;
+          if(!d||!st||!en){alert('Fill date,start,end');return}
+          const s={id:uid('s'),date:d,start:st,end:en,booked:false}; nurse.slots.push(s); saveState(state); alert('Added'); closeModal(); openNurseDashboard(); renderAll();
+        });
+        document.querySelectorAll('.del-slot').forEach(b=>b.addEventListener('click',e=>{
+          const id=e.target.dataset.id; nurse.slots = nurse.slots.filter(x=>x.id!==id); saveState(state); alert('Deleted'); closeModal(); openNurseDashboard(); renderAll();
+        }));
+        document.querySelectorAll('.accept').forEach(b=>b.addEventListener('click',e=>{
+          const id = e.target.dataset.id; const booking = state.bookings.find(x=>x.id===id); if(!booking) return; booking.status='accepted'; const s = nurse.slots.find(x=>x.id===booking.slotId); if(s) s.booked=true; saveState(state); alert('Accepted'); closeModal(); renderAll();
+        }));
+        document.querySelectorAll('.decline').forEach(b=>b.addEventListener('click',e=>{
+          const id = e.target.dataset.id; const bookingIdx = state.bookings.findIndex(x=>x.id===id); if(bookingIdx===-1) return; const booking = state.bookings[bookingIdx]; const s = nurse.slots.find(x=>x.id===booking.slotId); if(s) s.booked=false; state.bookings.splice(bookingIdx,1); saveState(state); alert('Declined and removed'); closeModal(); renderAll();
+        }));
+      });
+    }
+
+    // --- Open nurse profile and booking process ---
+    function openProfile(nurseId){
+      const n = getNurseById(nurseId); if(!n) return; const tplEl = document.getElementById('profile-view');
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center"><div><h2>${escapeHtml(n.userName)}</h2><div class="small muted">${escapeHtml(n.category)} — ${escapeHtml(n.experience)} yrs</div></div><div><button id="book-now" class="btn">Book</button></div></div>`;
+      html += `<div style="margin-top:8px"><p>${escapeHtml(n.bio||'No bio')}</p></div>`;
+      html += `<div style="margin-top:12px"><h4>Available slots</h4>`;
+      const slots = n.slots.filter(s=>!s.booked);
+      if(slots.length===0) html += '<div class="small muted">No available slots</div>';
+      slots.forEach(s=>{ html += `<div style="padding:8px;border-radius:8px;background:#fff;margin-bottom:6px;display:flex;justify-content:space-between"><div>${s.date} ${s.start} - ${s.end}</div><div><button class="book-slot" data-slot="${s.id}" data-nurse="${n.id}">Reserve</button></div></div>` });
+
+      html += `</div>`;
+      tplEl.innerHTML = html; tplEl.style.display='block'; tplEl.scrollIntoView();
+      document.getElementById('book-now').addEventListener('click',()=>openBookingModal(n.id));
+      document.querySelectorAll('.book-slot').forEach(b=>b.addEventListener('click',e=>{
+        const sid = e.target.dataset.slot; const nid = e.target.dataset.nurse; openBookingModal(nid,sid);
+      }));
+    }
+
+    function openBookingModal(nurseId, slotId=null){
+      const nurse = getNurseById(nurseId);
+      if(!nurse) return;
+      const body = `<div><div class="small muted">Booking: ${escapeHtml(nurse.userName)}</div>
+        <div style="margin-top:8px"><label>Select slot</label><select id="booking-slot">${nurse.slots.filter(s=>!s.booked).map(s=>`<option value="${s.id}" ${slotId===s.id? 'selected':''}>${s.date} ${s.start}-${s.end}</option>`).join('')}</select></div>
+        <div style="margin-top:8px"><label>Notes (optional)</label><textarea id="booking-notes"></textarea></div>
+        <div style="margin-top:8px"><button id="booking-do" class="btn">Request booking</button></div></div>`;
+      showModal('Request booking', body, ()=>{
+        document.getElementById('booking-do').addEventListener('click',()=>{
+          const user = getCurrentUser(); if(!user || user.role!=='patient'){alert('Sign in as patient to book');return}
+          const slotSel = document.getElementById('booking-slot').value; const notes = document.getElementById('booking-notes').value;
+          if(!slotSel){alert('Choose slot');return}
+          const slot = nurse.slots.find(s=>s.id===slotSel);
+          if(!slot||slot.booked){alert('Slot unavailable');return}
+          const booking = {id:uid('b'),patientId:user.id,nurseId:nurse.id,slotId:slot.id,date:slot.date,start:slot.start,end:slot.end,status:'pending',notes,createdAt:new Date().toISOString()};
+          state.bookings.push(booking); saveState(state); closeModal(); renderAll(); alert('Requested — nurse will accept or decline');
+        });
+      });
+    }
+
+    function cancelBooking(bookingId){
+      const idx = state.bookings.findIndex(b=>b.id===bookingId); if(idx===-1) return; const b = state.bookings[idx]; const nurse = getNurseById(b.nurseId); if(nurse){ const s = nurse.slots.find(x=>x.id===b.slotId); if(s) s.booked=false }
+      state.bookings.splice(idx,1); saveState(state); renderAll(); alert('Cancelled');
+    }
+
+    // --- Chat ---
+    function openChat(bookingId){
+      const booking = state.bookings.find(b=>b.id===bookingId); if(!booking) return; const nurse = getNurseById(booking.nurseId); const patient = state.users.find(u=>u.id===booking.patientId);
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center"><div><h3>Chat — ${escapeHtml(nurse.userName)}</h3><div class="small muted">Booking ${booking.date} ${booking.start}-${booking.end} — Status: ${booking.status}</div></div></div>`;
+      html += `<div class="chat-box"><div class="messages" id="chat-messages"></div><div style="margin-top:6px;display:flex;gap:8px"><input id="chat-input" placeholder="Message..." /> <button id="chat-send" class="btn">Send</button></div></div>`;
+      showModal('Chat', html, ()=>{
+        renderMessages();
+        document.getElementById('chat-send').addEventListener('click',()=>{
+          const msg = document.getElementById('chat-input').value.trim(); if(!msg) return;
+          const sender = getCurrentUser(); if(!sender){alert('Sign in to chat');return}
+          const messages = booking.messages || [];
+          messages.push({id:uid('m'),senderId:sender.id,text:msg,ts:new Date().toISOString()});
+          booking.messages = messages; saveState(state); document.getElementById('chat-input').value=''; renderMessages();
+        });
+      });
+
+      function renderMessages(){
+        const messages = booking.messages || [];
+        const el = document.getElementById('chat-messages'); if(!el) return;
+        el.innerHTML = '';
+        messages.forEach(m=>{
+          const u = state.users.find(x=>x.id===m.senderId)||{name:'?'};
+          const div = document.createElement('div'); div.className='message'+(m.senderId===getCurrentUser().id? ' me':''); div.innerHTML = `<div style="font-size:13px;font-weight:700">${escapeHtml(u.name)}</div><div style="font-size:14px">${escapeHtml(m.text)}</div><div class="small muted" style="margin-top:6px;font-size:12px">${new Date(m.ts).toLocaleString()}</div>`;
+          el.appendChild(div);
+        });
+        el.scrollTop = el.scrollHeight;
+      }
+    }
+
+    // --- Modal helpers ---
+    const modalEl = document.getElementById('modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody = document.getElementById('modal-body');
+    const modalClose = document.getElementById('modal-close');
+    let modalCallback = null;
+
+    modalClose.addEventListener('click',closeModal);
+    function showModal(title, htmlContent, callback){ modalTitle.textContent = title; modalBody.innerHTML = htmlContent; modalEl.style.display='flex'; modalCallback = callback; if(callback) callback(); }
+    function closeModal(){ modalEl.style.display='none'; modalBody.innerHTML=''; modalCallback = null; }
+
+    // --- Misc flows ---
+    function renderAll(){ state = getState(); renderNurses(); renderAccount(); renderMyBookings(); }
+
+    // categories filter
+    document.querySelectorAll('.pill').forEach(b=>b.addEventListener('click',()=>{
+      const cat = b.dataset.cat; renderNurses(cat);
+    }));
+
+    // initialize
+    renderAll();
+
+    // small helper to show a modal with custom init on clicking view btn in header
+    function openBookingDemo(){ openAuthModal(); }
+
+    // small helper for admin button
+    document.getElementById('btn-admin').addEventListener('click',()=>{
+      const u = getCurrentUser(); if(!u || u.role!=='admin'){alert('Admin only (sign in as admin@example.com / admin)');return} openAdminPanel();
+    });
+
+    // initial demo content: create a couple of sample nurses if none
+    if(state.nurses.length===0){
+      // create two sample nurse accounts (auto-approved)
+      const u1 = {id:uid('u'),name:'Leila Haddad',email:'leila@example.com',phone:'0612345678',password:'nurse1',role:'nurse'};
+      const u2 = {id:uid('u'),name:'Samir K.',email:'samir@example.com',phone:'0698765432',password:'nurse2',role:'nurse'};
+      state.users.push(u1,u2);
+      state.nurses.push({id:uid('n'),userId:u1.id,userName:u1.name,category:'elderly',experience:6,bio:'Experienced elderly care nurse',approved:true,slots:[{id:uid('s'),date:todayPlus(1),start:'09:00',end:'12:00',booked:false},{id:uid('s'),date:todayPlus(2),start:'14:00',end:'16:00',booked:false}]});
+      state.nurses.push({id:uid('n'),userId:u2.id,userName:u2.name,category:'pediatric',experience:4,bio:'Pediatric nurse with friendly approach',approved:true,slots:[{id:uid('s'),date:todayPlus(3),start:'10:00',end:'13:00',booked:false}]});
+      saveState(state); renderAll();
+    }
+
+    function todayPlus(days){ const d = new Date(); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); }
+  </script>
+</body>
+</html>
